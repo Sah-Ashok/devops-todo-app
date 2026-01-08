@@ -14,3 +14,45 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+
+ci.yml without docker integration 
+
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # -------- Backend --------
+      - name: Install backend dependencies
+        working-directory: Backend
+        run: npm install
+
+      - name: Backend check
+        working-directory: Backend
+        run: node -v
+
+      # -------- Frontend --------
+      - name: Install frontend dependencies
+        working-directory: Frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: Frontend
+        run: npm run build
