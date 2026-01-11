@@ -47,6 +47,9 @@ jobs:
           key: ${{ secrets.AZURE_SSH_KEY }}
           script: |
             cd devops-todo
+            echo "MONGO_USER=${{ secrets.MONGO_USER }}" > .env
+            echo  "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> .env
+            echo  "MONGO_DB=${{ secrets.MONGO_DB }}" >> .env
             docker-compose down
             docker-compose pull
             docker-compose up -d
