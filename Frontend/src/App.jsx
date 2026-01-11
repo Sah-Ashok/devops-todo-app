@@ -32,7 +32,7 @@ function App() {
   }
   return (
     <div style={{padding:"40px"}}>
-      <h1>Todo App (Devops Learning)</h1>
+      <h1>Todo App (Devops Learning - Complete)</h1>
       <input 
         type="text" 
         value={title} 

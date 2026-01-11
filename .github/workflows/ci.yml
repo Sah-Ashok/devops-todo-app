@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI-CD Pipeline
 
 on:
   push:
@@ -6,30 +6,47 @@ on:
       - main
 
 jobs:
-  docker-build-push:
-    runs-on: ubuntu-latest
+  build-and-push:
+   runs-on:ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{secrets.DOCKER_USERNAME}}
+        password: ${{secrets.DOCKER_PASSWORD}}
 
-      # -------- Backend --------
-      - name: Build & push backend image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/todo-backend:latest ./Backend
-          docker push ${{ secrets.DOCKER_USERNAME }}/todo-backend:latest
+#----------Backend ---------------------
+    - name: Build and Push backend
+      run : |
+       docker build -t ${{secrets.DOCKER_USERNAME}}/todo-backend:latest -f ./backend/
+       docker push ${{secrets.DOCKER_USERNAME}}/todo-backend:latest
+#----------Frontented---------------------
+    - name: Build and push frontend
+      run: |
+        docker build -t ${{secrets.DOCKER_USERNAME}}/todo-frontend:latest ./Frontented
+        docker push ${{secrets.DOCKER_USERNAEM}}/tood-frontend:latest
 
-      # -------- Frontend --------
-      - name: Build & push frontend image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest ./Frontend
-          docker push ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest
+deploy:
+  needs: build-and-push 
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Deploy to Azure VM
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{secret.AZURE_VM_IP}}
+        username: ${{secrets.AZURE_VM_USER}}
+        key: ${{ secrets.AZURE_SSH_KEY }}
+        script: |
+          cd devops-todo
+          docker compose pull 
+          docker compose up -d
+
+

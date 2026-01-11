@@ -56,3 +56,42 @@ jobs:
       - name: Build frontend
         working-directory: Frontend
         run: npm run build
+
+
+
+building ci pipline with docker 
+ name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker-build-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # -------- Backend --------
+      - name: Build & push backend image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/todo-backend:latest ./Backend
+          docker push ${{ secrets.DOCKER_USERNAME }}/todo-backend:latest
+
+      # -------- Frontend --------
+      - name: Build & push frontend image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest ./Frontend
+          docker push ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest
