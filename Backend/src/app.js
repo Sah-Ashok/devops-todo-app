@@ -3,6 +3,10 @@ const cors = require("cors");
 const morgan = require("morgan");
 const todoRoutes = require("./routes/todo.routes");
 const connectDB = require("./config/db");
+const client = require("prom-client");
+
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics();
 
 const app = express();
 
@@ -15,6 +19,10 @@ app.use(morgan("dev"));
 connectDB();
 
 app.use("/api/todos",todoRoutes);
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
 
 app.get("/health",(req,res)=>{
