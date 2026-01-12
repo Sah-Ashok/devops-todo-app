@@ -34,22 +34,29 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest ./Frontend
           docker push ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
 
-    steps:
-      - name: Deploy to Azure VM
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.AZURE_VM_IP }}
-          username: ${{ secrets.AZURE_VM_USER }}
-          key: ${{ secrets.AZURE_SSH_KEY }}
-          script: |
-            cd devops-todo
-            echo "MONGO_USER=${{ secrets.MONGO_USER }}" > .env
-            echo  "MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }}" >> .env
-            echo  "MONGO_DB=${{ secrets.MONGO_DB }}" >> .env
-            docker-compose down
-            docker-compose pull
-            docker-compose up -d
+  deploy:
+  needs: build-and-push
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: Deploy to Azure VM
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.AZURE_VM_IP }}
+        username: ${{ secrets.AZURE_VM_USER }}
+        key: ${{ secrets.AZURE_SSH_KEY }}
+        script: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/todo-backend:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest
+
+          docker rm -f todo1 todo2 todo3 todo-frontend || true
+
+          docker run -d --name todo1 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5001:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
+          docker run -d --name todo2 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5002:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
+          docker run -d --name todo3 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5003:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
+
+          docker run -d --name todo-frontend -p 6000:3000 ${{ secrets.DOCKER_USERNAME }}/todo-frontend
+
+          sudo systemctl reload nginx
+
