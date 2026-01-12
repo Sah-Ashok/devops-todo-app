@@ -1,12 +1,12 @@
 import './App.css'
-const API = import.meta.env.VITE_API_URL;
+// const API = import.meta.env.VITE_API_URL;
 import { useEffect, useState } from 'react'
 function App() {
   const [todos, setTodos] = useState([])
   const [title, setTitle] = useState("")
   const fetchTodos = async() =>{
     try{
-      const response = await fetch(`${API}/api/todos`)
+      const response = await fetch(`/api/todos`)
       const data = await response.json()
       setTodos(data)
     }catch(error){
@@ -20,7 +20,7 @@ function App() {
  
   const addTodo = async() =>{
     if(!title) return;
-    await fetch(`${API}/api/todos`,{
+    await fetch(`/api/todos`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json"
