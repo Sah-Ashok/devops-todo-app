@@ -34,29 +34,32 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest ./Frontend
           docker push ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest
 
-
   deploy:
-  needs: build-and-push
-  runs-on: ubuntu-latest
+    needs: build-and-push
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Deploy to Azure VM
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AZURE_VM_IP }}
-        username: ${{ secrets.AZURE_VM_USER }}
-        key: ${{ secrets.AZURE_SSH_KEY }}
-        script: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/todo-backend:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest
+    steps:
+      - name: Deploy to Azure VM (Production Mode)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AZURE_VM_IP }}
+          username: ${{ secrets.AZURE_VM_USER }}
+          key: ${{ secrets.AZURE_SSH_KEY }}
+          script: |
+            echo "Pulling latest images..."
+            docker pull ${{ secrets.DOCKER_USERNAME }}/todo-backend:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/todo-frontend:latest
 
-          docker rm -f todo1 todo2 todo3 todo-frontend || true
+            echo "Stopping old containers..."
+            docker rm -f todo1 todo2 todo3 todo-frontend || true
 
-          docker run -d --name todo1 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5001:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
-          docker run -d --name todo2 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5002:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
-          docker run -d --name todo3 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5003:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
+            echo "Starting backend replicas..."
+            docker run -d --name todo1 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5001:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
+            docker run -d --name todo2 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5002:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
+            docker run -d --name todo3 --network todo-net -e MONGO_URI=mongodb://mongo:27017/todo -p 5003:5000 ${{ secrets.DOCKER_USERNAME }}/todo-backend
 
-          docker run -d --name todo-frontend -p 6000:3000 ${{ secrets.DOCKER_USERNAME }}/todo-frontend
+            echo "Starting frontend..."
+            docker run -d --name todo-frontend -p 6000:3000 ${{ secrets.DOCKER_USERNAME }}/todo-frontend
 
-          sudo systemctl reload nginx
-
+            echo "Reloading Nginx..."
+            sudo systemctl reload nginx
