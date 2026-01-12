@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 function App() {
   const [todos, setTodos] = useState([])
   const [title, setTitle] = useState("")
+  console.log(todos);
   const fetchTodos = async() =>{
     try{
       const response = await fetch(`/api/todos`)

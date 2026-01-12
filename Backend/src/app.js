@@ -26,7 +26,7 @@ app.get("/metrics", async (req, res) => {
 
 
 app.get("/health",(req,res)=>{
-  res.status(200).json({status:"OK"});
+  res.status(200).json({status:"OK - v2"});
 })
 
 module.exports = app;
