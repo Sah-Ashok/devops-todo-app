@@ -18,7 +18,7 @@ app.use(morgan("dev"));
 //Database 
 connectDB();
 
-app.use("todos",todoRoutes);
+app.use("/todos",todoRoutes);
 app.get("/metrics", async (req, res) => {
   res.set("Content-Type", client.register.contentType);
   res.end(await client.register.metrics());
